@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = {
     "spring.datasource.password=unused-test-password",
+    "spring.flyway.enabled=false",
     "CLINIC_DENTIST_PASSWORD=fictional-dentist-test",
     "CLINIC_RECEPTIONIST_PASSWORD=fictional-receptionist-test"
 })
@@ -24,6 +25,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class LoginTest {
     @Autowired MockMvc mvc;
     @MockitoBean JdbcTemplate jdbcTemplate;
+    @MockitoBean DashboardService dashboard;
+
+    @org.junit.jupiter.api.BeforeEach
+    void dashboardTotals() {
+        org.mockito.Mockito.when(dashboard.totals(org.mockito.ArgumentMatchers.any()))
+            .thenReturn(new DashboardService.Totals(0, 0, java.math.BigDecimal.ZERO));
+        org.mockito.Mockito.when(dashboard.appointments(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyBoolean()))
+            .thenReturn(java.util.List.of());
+        org.mockito.Mockito.when(dashboard.payments(org.mockito.ArgumentMatchers.any()))
+            .thenReturn(java.util.List.of());
+    }
 
     @Test
     void visitorsMustSignInAndLoginFormHasCsrfToken() throws Exception {
@@ -49,6 +61,21 @@ class LoginTest {
             mvc.perform(post("/logout").session(session).with(csrf()))
                 .andExpect(redirectedUrl("/login?logout"));
             mvc.perform(get("/")).andExpect(status().is3xxRedirection());
+        }
+    }
+
+    @Test
+    void dashboardLinksOpenProtectedEmptyDetailViews() throws Exception {
+        mvc.perform(get("/").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("dentist").roles("DENTIST")))
+            .andExpect(status().isOk())
+            .andExpect(content().string(containsString("/today/appointments")))
+            .andExpect(content().string(containsString("/today/arrivals")))
+            .andExpect(content().string(containsString("/today/collections")));
+        for (String path : new String[]{"appointments", "arrivals", "collections"}) {
+            mvc.perform(get("/today/" + path)).andExpect(status().is3xxRedirection());
+            mvc.perform(get("/today/" + path).with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("receptionist").roles("RECEPTIONIST")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("No records for today.")));
         }
     }
 

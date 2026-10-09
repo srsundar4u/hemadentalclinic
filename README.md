@@ -69,6 +69,18 @@ Both roles currently access the protected welcome page. Per-screen permissions w
 
 Automated login tests use fictional test passwords and mock database access. They verify anonymous redirects, both staff logins, invalid credentials, logout and CSRF enforcement without needing your database password. Run the Maven `test` goal from IntelliJ to execute them.
 
+## Dashboard milestone
+
+After reloading Maven and restarting, both staff accounts see today's appointment count, arrival count and collections amount. Click a card for its read-only details and use Back to dashboard to return. The dashboard itself has no detail tables.
+
+Flyway runs `db/migration/V1__create_clinic_tables.sql` once against the empty `dental_clinic` database, creating patients, appointments and payments tables plus its migration-history table. No records are seeded. `clinic_app` must own the database and be able to create tables in its public schema. Do not edit an already-applied migration; future schema changes will use a new numbered migration. Do not enable baseline or delete existing tables to work around a migration error; inspect the database first.
+
+Initially the totals are 0, 0 and ₹0.00 because there are no appointments or payments yet. Registration, booking and payment entry forms will be developed in subsequent screens. The detail pages already read existing rows when records are available.
+
+`PageController` selects today's date in Asia/Kolkata and asks `DashboardService` for totals. `DashboardService` runs parameterized SQL through `JdbcTemplate`; Thymeleaf displays the result. Appointments count all bookings today, including cancelled/no-show. Arrivals count today's bookings with a recorded check-in, even after consultation/completion. Collections sum payments received today regardless of appointment date. Date boundaries are inclusive at today's midnight and exclusive at tomorrow's midnight. Stored appointment/payment timestamps represent clinic local time.
+
+Tests use a separate in-memory H2 database in PostgreSQL compatibility mode to verify empty totals, midnight boundaries, completed arrivals and payments for older visits. This does not replace verification on your PostgreSQL installation after restart.
+
 ## Planned increments
 
 1. Start the server and display the home page.

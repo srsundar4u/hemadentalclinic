@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title + ' | Dental Clinic'}">Today's details</title>
+    <link rel="stylesheet" th:href="@{/css/clinic.css}">
+</head>
+<body>
+<main>
+    <p class="brand">Dr Hemshree's Dental Studio</p>
+    <section class="card">
+        <a th:href="@{/}">← Back to dashboard</a>
+        <h1 th:text="${title}">Today's details</h1>
+        <p th:text="${#temporals.format(date, 'dd MMMM yyyy')}">Today's date</p>
+        <p th:if="${#lists.isEmpty(rows)}">No records for today.</p>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(rows)}">
+            <table>
+                <thead><tr><th>Patient</th><th>Time</th><th th:text="${payments ? 'Amount' : 'Status'}">Status</th><th th:if="${payments}">Method</th></tr></thead>
+                <tbody>
+                <tr th:each="row : ${rows}">
+                    <td th:text="${row['full_name']}"></td>
+                    <td th:text="${row[payments ? 'paid_at' : 'starts_at']}"></td>
+                    <td th:if="${!payments}" th:text="${row['status']}"></td>
+                    <td th:if="${payments}" th:text="${'₹' + #numbers.formatDecimal(row['amount'], 1, 'COMMA', 2, 'POINT')}"></td>
+                    <td th:if="${payments}" th:text="${row['method']}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

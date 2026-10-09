@@ -10,10 +10,21 @@
 <main>
     <p class="brand">Dental Clinic Management</p>
     <section class="card">
-        <h1>Welcome to Dr Hemshree's Dental Studio</h1>
+        <h1>Dr Hemashree's Dental Studio</h1>
+        <p th:text="${#temporals.format(date, 'dd MMMM yyyy')}">Today's date</p>
         <p>Signed in as <strong th:text="${username}">staff</strong>.</p>
-        <p>Your staff login is working. The dashboard and patient screens will be added next.</p>
-        <p class="hint">Use fictional patient information while developing this application.</p>
+        <div class="totals">
+            <a class="total" th:href="@{/today/appointments}">
+                <span>Appointments</span><strong th:text="${totals.appointments}">0</strong>
+            </a>
+            <a class="total" th:href="@{/today/arrivals}">
+                <span>Arrivals</span><strong th:text="${totals.arrivals}">0</strong>
+            </a>
+            <a class="total" th:href="@{/today/collections}">
+                <span>Collections</span><strong th:text="${'₹' + #numbers.formatDecimal(totals.collections, 1, 'COMMA', 2, 'POINT')}">₹0.00</strong>
+            </a>
+        </div>
+        <p class="hint">Select a total to view its details.</p>
         <form th:action="@{/logout}" method="post">
             <button type="submit">Sign out</button>
         </form>
