@@ -16,4 +16,5 @@
     <form th:if="${dentist && appointment.status == 'ARRIVED'}" th:action="@{/consultations/{id}/start(id=${appointment.id})}" method="post"><button type="submit">Start consultation</button></form>
     <a class="button-link" th:if="${dentist && (appointment.status == 'IN_CONSULTATION' || appointment.status == 'COMPLETED')}" th:href="@{/consultations/{id}(id=${appointment.id})}" th:text="${appointment.status == 'COMPLETED' ? 'View completed visit' : 'Continue consultation'}"></a>
     <p class="hint" th:if="${!dentist && appointment.status == 'ARRIVED'}">Arrival recorded. The dentist can now start consultation.</p>
+    <a class="button-link" th:if="${appointment.status == 'COMPLETED'}" th:href="@{/billing/{id}(id=${appointment.id})}">Billing and payments</a>
 </section></main></body></html>

@@ -31,9 +31,14 @@ class LoginTest {
     @MockitoBean AppointmentService appointmentService;
     @MockitoBean ConsultationRepository consultations;
     @MockitoBean ConsultationService consultationService;
+    @MockitoBean BillingRepository billing;
+    @MockitoBean BillingService billingService;
+    @MockitoBean DailyCheckRepository dailyChecks;
 
     @org.junit.jupiter.api.BeforeEach
     void dashboardTotals() {
+        org.mockito.Mockito.when(billing.forPatient(org.mockito.ArgumentMatchers.anyLong()))
+            .thenReturn(new BillingRepository.Summary(java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO));
         org.mockito.Mockito.when(dashboard.totals(org.mockito.ArgumentMatchers.any()))
             .thenReturn(new DashboardService.Totals(0, 0, java.math.BigDecimal.ZERO));
         org.mockito.Mockito.when(dashboard.appointments(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyBoolean()))
@@ -205,6 +210,74 @@ class LoginTest {
             .andExpect(content().string(containsString("Print prescription")));
         mvc.perform(get("/consultations/4/prescription").with(dentist)).andExpect(status().isOk())
             .andExpect(content().string(org.hamcrest.Matchers.not(containsString("DRAFT"))));
+    }
+
+    @Test
+    void staffCanRecordChargesAndPaymentsWithValidation() throws Exception {
+        var staff = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("receptionist").roles("RECEPTIONIST");
+        var now = java.time.LocalDateTime.now();
+        org.mockito.Mockito.when(appointments.find(4)).thenReturn(java.util.Optional.of(new Appointment(4, 7, "Synthetic Patient", now, 30, "", "COMPLETED", now)));
+        org.mockito.Mockito.when(billing.summary(4)).thenReturn(new BillingRepository.Summary(new java.math.BigDecimal("1000.00"), new java.math.BigDecimal("400.00")));
+        org.mockito.Mockito.when(billing.list("")).thenReturn(java.util.List.of(java.util.Map.of("id", 4L, "starts_at", now, "full_name", "Synthetic Patient", "charged", new java.math.BigDecimal("1000.00"), "paid", new java.math.BigDecimal("400.00"))));
+        mvc.perform(get("/billing")).andExpect(status().is3xxRedirection());
+        mvc.perform(get("/billing").with(staff)).andExpect(status().isOk()).andExpect(content().string(containsString("Synthetic Patient")));
+        mvc.perform(get("/billing/4").with(staff)).andExpect(status().isOk()).andExpect(content().string(containsString("₹600.00")));
+        String token = java.util.UUID.randomUUID().toString();
+        mvc.perform(post("/billing/4/charges").with(staff).with(csrf()).param("description", "Synthetic treatment charge").param("amount", "1000.00").param("requestToken", token))
+            .andExpect(redirectedUrl("/billing/4"));
+        mvc.perform(post("/billing/4/payments").with(staff).with(csrf()).param("amount", "200.00").param("method", "UPI").param("requestToken", token))
+            .andExpect(redirectedUrl("/billing/4"));
+        mvc.perform(post("/billing/4/payments").with(staff).with(csrf()).param("amount", "-1.001").param("method", "INVALID").param("requestToken", token))
+            .andExpect(status().isOk()).andExpect(model().attributeHasFieldErrors("paymentForm", "amount", "method"));
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("Payment cannot exceed the outstanding balance."))
+            .when(billingService).pay(org.mockito.ArgumentMatchers.eq(4L), org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.when(billing.summary(4)).thenReturn(new BillingRepository.Summary(new java.math.BigDecimal("1000.00"), new java.math.BigDecimal("1000.00")));
+        mvc.perform(post("/billing/4/payments").with(staff).with(csrf()).param("amount", "200.00").param("method", "CASH").param("requestToken", token))
+            .andExpect(status().isOk()).andExpect(content().string(containsString("Payment cannot exceed")));
+        mvc.perform(post("/billing/4/payments").with(staff).param("amount", "200.00")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void dailyChecksAllowBothStaffAndValidateDatesAndStatuses() throws Exception {
+        var date = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+        mvc.perform(get("/daily-checks")).andExpect(status().is3xxRedirection());
+        for (String role : new String[]{"DENTIST", "RECEPTIONIST"}) {
+            var staff = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(role.toLowerCase()).roles(role);
+            mvc.perform(get("/daily-checks").with(staff)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Sterilization completed")))
+                .andExpect(content().string(containsString("Required lab work sent")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")));
+            org.mockito.Mockito.when(dailyChecks.save(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(true);
+            mvc.perform(post("/daily-checks").with(staff).with(csrf()).param("date", date.toString())
+                .param("sterilizationStatus", "DONE").param("labStatus", "NOT_REQUIRED").param("version", "-1"))
+                .andExpect(redirectedUrl("/daily-checks?date=" + date));
+        }
+        var staff = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("receptionist").roles("RECEPTIONIST");
+        mvc.perform(post("/daily-checks").with(staff).with(csrf()).param("date", date.plusDays(1).toString())
+            .param("sterilizationStatus", "INVALID").param("labStatus", "DONE"))
+            .andExpect(status().isOk()).andExpect(model().attributeHasFieldErrors("dailyCheckForm", "date", "sterilizationStatus"));
+        mvc.perform(post("/daily-checks").with(staff).param("date", date.toString())).andExpect(status().isForbidden());
+        org.mockito.Mockito.when(dailyChecks.save(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(false);
+        mvc.perform(post("/daily-checks").with(staff).with(csrf()).param("date", date.toString())
+            .param("sterilizationStatus", "DONE").param("labStatus", "DONE"))
+            .andExpect(status().isOk()).andExpect(content().string(containsString("Another staff member updated")));
+    }
+
+    @Test
+    void enhancedPatientProfileAndEditFormShowSavedDetails() throws Exception {
+        var staff = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("receptionist").roles("RECEPTIONIST");
+        var dob = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata")).minusYears(25);
+        org.mockito.Mockito.when(patients.find(7)).thenReturn(java.util.Optional.of(new Patient(7, "Synthetic Patient", "9876543210", dob, null, "FEMALE", new java.math.BigDecimal("62.50"), new java.math.BigDecimal("165.25"))));
+        mvc.perform(get("/patients/7").with(staff)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("25 years")))
+            .andExpect(content().string(containsString("Female")))
+            .andExpect(content().string(containsString("62.50 kg")))
+            .andExpect(content().string(containsString("165.25 cm")));
+        mvc.perform(get("/patients/7/edit").with(staff)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("value=\"62.50\"")));
+        mvc.perform(post("/patients").with(staff).with(csrf()).param("fullName", "Synthetic Patient").param("phone", "9876543210")
+            .param("weightKg", "-1").param("heightCm", "0").param("sex", "INVALID"))
+            .andExpect(status().isOk()).andExpect(model().attributeHasFieldErrors("patientForm", "weightKg", "heightCm", "sex"));
     }
 
     @Test

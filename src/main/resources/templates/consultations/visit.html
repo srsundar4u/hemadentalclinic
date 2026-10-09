@@ -7,6 +7,7 @@
     <p><strong th:text="${appointment.patientName}"></strong> · <span th:text="${#temporals.format(appointment.startsAt, 'dd MMM yyyy, hh:mm a')}"></span></p>
     <p th:text="${visit.completed() ? 'Completed visit — read-only' : 'Draft — consultation in progress'}"></p>
     <p class="success" role="status" th:if="${message}" th:text="${message}"></p>
+    <a class="button-link" th:if="${visit.completed()}" th:href="@{/billing/{id}(id=${appointment.id})}">Billing and payments</a>
     <form th:action="@{/consultations/{id}(id=${appointment.id})}" th:object="${consultationForm}" method="post">
         <div class="error" role="alert" th:if="${#fields.hasErrors('*')}"><p>Please review the notes below.</p><p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p></div>
         <input type="hidden" th:field="*{version}">

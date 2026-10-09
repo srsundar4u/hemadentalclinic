@@ -12,3 +12,8 @@ target/
 data/
 backups/
 application-local.properties
+.deployment/
+.tools/
+android/.gradle/
+android/local.properties
+android/**/build/

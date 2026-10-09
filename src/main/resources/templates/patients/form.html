@@ -15,6 +15,11 @@
             <p class="field-error" th:errors="*{phone}"></p>
             <label for="dateOfBirth">Date of birth (optional)</label><input th:field="*{dateOfBirth}" type="date">
             <p class="field-error" th:errors="*{dateOfBirth}"></p>
+            <p class="hint">Age is calculated automatically from date of birth on the patient's profile.</p>
+            <label for="sex">Sex (optional)</label><select th:field="*{sex}"><option value="">Not provided</option><option value="MALE">Male</option><option value="FEMALE">Female</option><option value="OTHER">Other</option></select>
+            <p class="field-error" th:errors="*{sex}"></p>
+            <label for="weightKg">Weight in kg (optional)</label><input th:field="*{weightKg}" type="number" min="0.01" max="9999.99" step="0.01"><p class="field-error" th:errors="*{weightKg}"></p>
+            <label for="heightCm">Height in cm (optional)</label><input th:field="*{heightCm}" type="number" min="0.01" max="9999.99" step="0.01"><p class="field-error" th:errors="*{heightCm}"></p>
             <label for="address">Address (optional)</label><textarea th:field="*{address}" maxlength="500" rows="3"></textarea>
             <p class="field-error" th:errors="*{address}"></p>
             <div class="actions"><button type="submit" th:text="${editing ? 'Save changes' : 'Register patient'}"></button><a th:href="${editing ? '/patients/' + patientId : '/patients'}">Cancel</a></div>

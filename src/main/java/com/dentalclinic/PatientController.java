@@ -14,9 +14,10 @@ public class PatientController {
     private final PatientRepository patients;
     private final AppointmentRepository appointments;
     private final ConsultationRepository consultations;
+    private final BillingRepository billing;
 
-    public PatientController(PatientRepository patients, AppointmentRepository appointments, ConsultationRepository consultations) {
-        this.patients = patients; this.appointments = appointments; this.consultations = consultations;
+    public PatientController(PatientRepository patients, AppointmentRepository appointments, ConsultationRepository consultations, BillingRepository billing) {
+        this.patients = patients; this.appointments = appointments; this.consultations = consultations; this.billing = billing;
     }
 
     @GetMapping
@@ -59,7 +60,9 @@ public class PatientController {
         var patient = patients.find(id);
         if (patient.isEmpty()) { throw new PatientNotFound(); }
         model.addAttribute("patient", patient.get());
+        model.addAttribute("age", patient.get().ageOn(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"))));
         model.addAttribute("appointments", appointments.forPatient(id));
+        model.addAttribute("balance", billing.forPatient(id));
         boolean dentist = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DENTIST"));
         model.addAttribute("dentist", dentist);
         if (dentist) { model.addAttribute("visits", consultations.forPatient(id)); }
@@ -75,6 +78,9 @@ public class PatientController {
         form.setPhone(patient.get().phone());
         form.setDateOfBirth(patient.get().dateOfBirth());
         form.setAddress(patient.get().address());
+        form.setSex(patient.get().sex());
+        form.setWeightKg(patient.get().weightKg());
+        form.setHeightCm(patient.get().heightCm());
         model.addAttribute("patientForm", form);
         model.addAttribute("editing", true);
         model.addAttribute("patientId", id);

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Visit bill | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"></head>
+<body><main><p class="brand">Dr Hemashree's Dental Studio</p><section class="card">
+    <nav><a th:href="@{/billing}">← Billing list</a> · <a th:href="@{/patients/{id}(id=${appointment.patientId})}">Patient profile</a> · <a th:href="@{/appointments/{id}(id=${appointment.id})}">Appointment</a></nav>
+    <h1>Billing and payments</h1><p><strong th:text="${appointment.patientName}"></strong> · <span th:text="${#temporals.format(appointment.startsAt, 'dd MMM yyyy, hh:mm a')}"></span></p>
+    <p class="success" role="status" th:if="${message}" th:text="${message}"></p>
+    <div th:object="${paymentForm}"><div class="error" th:if="${#fields.hasErrors('*')}" role="alert"><p th:each="err : ${#fields.allErrors()}" th:text="${err}"></p></div></div>
+    <div th:object="${chargeForm}"><div class="error" th:if="${#fields.hasErrors('*')}" role="alert"><p th:each="err : ${#fields.allErrors()}" th:text="${err}"></p></div></div>
+    <div class="totals"><div class="total"><span>Total charges</span><strong th:text="${'₹' + #numbers.formatDecimal(summary.charged, 1, 'COMMA', 2, 'POINT')}"></strong></div><div class="total"><span>Total paid</span><strong th:text="${'₹' + #numbers.formatDecimal(summary.paid, 1, 'COMMA', 2, 'POINT')}"></strong></div><div class="total"><span>Outstanding balance</span><strong th:text="${'₹' + #numbers.formatDecimal(summary.balance(), 1, 'COMMA', 2, 'POINT')}"></strong></div></div>
+    <h2>Charges</h2><p th:if="${#lists.isEmpty(charges)}">No charges recorded yet.</p>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(charges)}"><table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody><tr th:each="charge : ${charges}"><td th:text="${charge['description']}"></td><td th:text="${'₹' + #numbers.formatDecimal(charge['amount'], 1, 'COMMA', 2, 'POINT')}"></td></tr></tbody></table></div>
+    <form th:if="${appointment.status == 'COMPLETED'}" th:action="@{/billing/{id}/charges(id=${appointment.id})}" th:object="${chargeForm}" method="post">
+        <h3>Add charge</h3><input type="hidden" th:field="*{requestToken}">
+        <label for="description">Treatment / charge description</label><input th:field="*{description}" maxlength="500" required>
+        <label for="chargeAmount">Amount (₹)</label><input id="chargeAmount" name="amount" th:value="*{amount}" type="number" step="0.01" min="0.01" max="9999999999.99" required>
+        <button type="submit">Add charge</button>
+    </form>
+    <h2>Payment history</h2><p th:if="${#lists.isEmpty(payments)}">No payments recorded yet.</p>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(payments)}"><table><thead><tr><th>Received</th><th>Method</th><th>Amount</th></tr></thead><tbody><tr th:each="payment : ${payments}"><td th:text="${payment['paid_at']}"></td><td th:text="${payment['method']}"></td><td th:text="${'₹' + #numbers.formatDecimal(payment['amount'], 1, 'COMMA', 2, 'POINT')}"></td></tr></tbody></table></div>
+    <form th:if="${appointment.status == 'COMPLETED' && summary.balance().signum() > 0}" th:action="@{/billing/{id}/payments(id=${appointment.id})}" th:object="${paymentForm}" method="post">
+        <h3>Record payment</h3><input type="hidden" th:field="*{requestToken}" id="paymentRequestToken">
+        <label for="paymentAmount">Amount received (₹)</label><input id="paymentAmount" name="amount" th:value="*{amount}" type="number" min="0.01" step="0.01" th:max="${summary.balance()}" required>
+        <label for="method">Payment method</label><select th:field="*{method}" required><option value="">Select method</option><option value="CASH">Cash</option><option value="UPI">UPI</option><option value="CARD">Card</option></select>
+        <button type="submit">Record payment</button><p class="hint">Partial payments are allowed. Payments are recorded as received now in clinic local time.</p>
+    </form>
+    <p th:if="${summary.charged.signum() > 0 && summary.balance().signum() == 0}">Paid in full.</p>
+    <p class="hint" th:unless="${appointment.status == 'COMPLETED'}">Complete the consultation before recording charges or payments.</p>
+    <p class="hint">This screen records payments; it does not process a bank or UPI transaction. Saved entries are retained in the history.</p>
+</section></main></body></html>

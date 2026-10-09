@@ -14,7 +14,8 @@ public class PatientRepository {
     private final JdbcTemplate jdbc;
     private final RowMapper<Patient> mapper = (rs, row) -> new Patient(
         rs.getLong("id"), rs.getString("full_name"), rs.getString("phone"),
-        rs.getObject("date_of_birth", java.time.LocalDate.class), rs.getString("address"));
+        rs.getObject("date_of_birth", java.time.LocalDate.class), rs.getString("address"),
+        rs.getString("sex"), rs.getBigDecimal("weight_kg"), rs.getBigDecimal("height_cm"));
 
     public PatientRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
@@ -38,19 +39,22 @@ public class PatientRepository {
         var key = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO patients(full_name, phone, date_of_birth, address) VALUES (?, ?, ?, ?)",
+                "INSERT INTO patients(full_name, phone, date_of_birth, address, sex, weight_kg, height_cm) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 new String[]{"id"});
             statement.setString(1, form.getFullName());
             statement.setString(2, form.getPhone());
             statement.setDate(3, form.getDateOfBirth() == null ? null : Date.valueOf(form.getDateOfBirth()));
             statement.setString(4, form.getAddress());
+            statement.setString(5, form.getSex());
+            statement.setBigDecimal(6, form.getWeightKg());
+            statement.setBigDecimal(7, form.getHeightCm());
             return statement;
         }, key);
         return java.util.Objects.requireNonNull(key.getKey()).longValue();
     }
 
     public boolean update(long id, PatientForm form) {
-        return jdbc.update("UPDATE patients SET full_name = ?, phone = ?, date_of_birth = ?, address = ? WHERE id = ?",
-            form.getFullName(), form.getPhone(), form.getDateOfBirth(), form.getAddress(), id) == 1;
+        return jdbc.update("UPDATE patients SET full_name = ?, phone = ?, date_of_birth = ?, address = ?, sex = ?, weight_kg = ?, height_cm = ? WHERE id = ?",
+            form.getFullName(), form.getPhone(), form.getDateOfBirth(), form.getAddress(), form.getSex(), form.getWeightKg(), form.getHeightCm(), id) == 1;
     }
 }

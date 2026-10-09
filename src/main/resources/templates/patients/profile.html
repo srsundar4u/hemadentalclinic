@@ -8,6 +8,12 @@
         <p class="success" role="status" th:if="${message}" th:text="${message}"></p>
         <h1 th:text="${patient.fullName}"></h1>
         <dl><dt>Patient ID</dt><dd th:text="${patient.id}"></dd><dt>Phone</dt><dd th:text="${patient.phone}"></dd><dt>Date of birth</dt><dd th:text="${patient.dateOfBirth == null ? 'Not provided' : #temporals.format(patient.dateOfBirth, 'dd MMM yyyy')}"></dd><dt>Address</dt><dd th:text="${patient.address == null || patient.address.isBlank() ? 'Not provided' : patient.address}"></dd></dl>
+        <dl>
+            <dt>Age</dt><dd th:text="${age == null ? 'Not provided' : age + ' years'}"></dd>
+            <dt>Sex</dt><dd th:text="${patient.sex == null ? 'Not provided' : #strings.capitalize(#strings.toLowerCase(patient.sex))}"></dd>
+            <dt>Weight</dt><dd th:text="${patient.weightKg == null ? 'Not provided' : patient.weightKg + ' kg'}"></dd>
+            <dt>Height</dt><dd th:text="${patient.heightCm == null ? 'Not provided' : patient.heightCm + ' cm'}"></dd>
+        </dl>
         <a class="button-link" th:href="@{/patients/{id}/edit(id=${patient.id})}">Edit details</a>
         <a class="button-link" th:href="@{/appointments/new(patientId=${patient.id})}">Book appointment</a>
         <h2>Appointments</h2>
@@ -17,6 +23,10 @@
             <p th:if="${#lists.isEmpty(visits)}">No consultation records yet.</p>
             <ul th:unless="${#lists.isEmpty(visits)}"><li th:each="visit : ${visits}"><a th:href="@{/consultations/{id}(id=${visit.appointmentId})}" th:text="${'Visit for appointment ' + visit.appointmentId}"></a> — <span th:text="${visit.completed() ? 'Completed' : 'Draft'}"></span></li></ul>
         </section>
-        <p class="hint">Charges, payments and balances will be added with the billing screen.</p>
+        <h2>Account balance</h2>
+        <p>Total charged: <strong th:text="${'₹' + #numbers.formatDecimal(balance.charged, 1, 'COMMA', 2, 'POINT')}"></strong></p>
+        <p>Total paid: <strong th:text="${'₹' + #numbers.formatDecimal(balance.paid, 1, 'COMMA', 2, 'POINT')}"></strong></p>
+        <p>Outstanding: <strong th:text="${'₹' + #numbers.formatDecimal(balance.balance(), 1, 'COMMA', 2, 'POINT')}"></strong></p>
+        <a th:href="@{/billing(q=${patient.id})}">View this patient's bills and payments</a>
     </section>
 </main></body></html>

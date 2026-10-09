@@ -119,6 +119,30 @@ Use Print / Save as PDF in the preview to open the browser's print dialog. Print
 
 This is a basic demo prescription layout. Clinic address and professional registration details have not been supplied; they are not invented. Verify long prescriptions in browser print preview for pagination. Disabling browser headers/footers removes the URL/date added by the browser. Prescription URLs remain dentist-only.
 
+## Billing and Payments
+
+Restart to apply V4, creating charges and adding duplicate-submission tokens to payments. Both staff accounts can open Billing and payments from the dashboard, completed appointment or completed consultation. Search the billing list by patient name or ID; it shows up to 100 completed visits. Open a visit to add a charge description and amount. Add multiple charges if needed, then record partial or full payments using Cash, UPI or Card.
+
+Amounts must be positive with at most two decimal places. Payments cannot exceed the remaining balance. Transactions lock the appointment while checking the balance and recording a payment, preventing simultaneous payments from exceeding it. Each submitted form has a unique request token to avoid duplicate entries from double submission; a successful save redirects to a fresh form. Records have no edit/delete action in this milestone; corrections/refunds are a future feature. No actual payment processing occurs.
+
+The patient profile shows total charges, paid amount and remaining balance across visits. The dashboard's collections uses payment receipt date, including payments for older completed visits. Receipt timestamps are generated in Asia/Kolkata when the payment is saved; backdated entry is not included yet. Patient clinical notes and prescriptions do not appear on billing pages. Clinic app permissions restrict clinical access as before.
+
+Manual check with synthetic data: complete a visit, charge ₹1000, record ₹400, verify ₹600 outstanding, record ₹600 and verify Paid in full. Check the patient's account totals and dashboard collections. Trying a payment above the balance should show an error. Forms, arithmetic, payment validation, duplicate submissions and persistence are covered by automated tests; verify locally on PostgreSQL before committing.
+
+## Daily checks
+
+Restart to apply V5 and open Daily checks from the dashboard. The same page records two daily confirmations for a selected date: Sterilization (Pending, Completed, Not required) and Required lab work sent (Pending/not sent, Sent, No lab work to send). Remarks are optional. Both staff roles can save. The page shows the latest saving account and timestamp. Open a past date to review or correct its checklist; future dates cannot be saved.
+
+One checklist is stored per date. A new date starts Pending for both items, with no saved record until submitted. Pending work from previous dates remains in that date's record; it is not automatically carried forward. These are staff-entered daily confirmations, not individual sterilization cycles or patient-specific lab orders. More checklist items and detailed tracking can be added later.
+
+The version field rejects stale updates from another browser tab or staff member. A conflict asks the user to copy remarks and reload. The repository uses an atomic insert or version-checked update. `DailyCheckController` validates input and uses the signed-in account for the saving username. Tests cover persistence by date, concurrent initial saves, stale edits, both staff roles, future-date rejection and CSRF.
+
+## Enhanced patient details
+
+Restart to apply V6, adding nullable sex, weight_kg and height_cm columns while preserving existing records. Registration and Edit details support sex (Male, Female, Other, or Not provided), optional weight in kilograms and optional height in centimetres. Entered measurements must be positive and use at most two decimal places. Clearing a measurement stores no value rather than zero.
+
+The profile calculates age in completed years from date of birth using today's date in Asia/Kolkata. Age is not stored, so it stays current as birthdays pass. Missing birth date displays Not provided. Existing patients can be updated through Edit details. These measurements are current profile values, not a visit-by-visit measurement history.
+
 ## Planned increments
 
 1. Start the server and display the home page.

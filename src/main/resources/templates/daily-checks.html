@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Daily checks | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"></head>
+<body><main><p class="brand">Dr Hemashree's Dental Studio</p><section class="card">
+    <nav><a th:href="@{/}">Dashboard</a> · <a th:href="@{/patients}">Patients</a> · <a th:href="@{/appointments}">Appointments</a></nav>
+    <h1>Daily checks</h1>
+    <form th:action="@{/daily-checks}" method="get"><label for="selectedDate">Check date</label><div class="search-row"><input id="selectedDate" name="date" type="date" th:value="${dailyCheckForm.date}" th:max="${today}" required><button type="submit">View date</button></div></form>
+    <p class="success" th:if="${message}" th:text="${message}" role="status"></p>
+    <p class="hint" th:if="${entry == null}">No saved checklist for this date. Both checks start as Pending.</p>
+    <form th:action="@{/daily-checks}" th:object="${dailyCheckForm}" method="post">
+        <input type="hidden" th:field="*{date}"><input type="hidden" th:field="*{version}">
+        <div class="error" th:if="${#fields.hasErrors('*')}" role="alert"><p th:each="err : ${#fields.allErrors()}" th:text="${err}"></p></div>
+        <h2 th:text="${dailyCheckForm.date == null ? 'Selected date' : #temporals.format(dailyCheckForm.date, 'dd MMM yyyy')}"></h2>
+        <label for="sterilizationStatus">Sterilization completed</label><select th:field="*{sterilizationStatus}" required><option value="PENDING">Pending</option><option value="DONE">Completed</option><option value="NOT_REQUIRED">Not required</option></select>
+        <label for="labStatus">Required lab work sent to lab</label><select th:field="*{labStatus}" required><option value="PENDING">Pending / not sent</option><option value="DONE">Sent</option><option value="NOT_REQUIRED">No lab work to send</option></select>
+        <label for="remarks">Remarks (optional)</label><textarea th:field="*{remarks}" rows="4" maxlength="2000" placeholder="For example, note remaining lab work or a pending sterilization check."></textarea>
+        <button type="submit">Save daily checks</button>
+    </form>
+    <p class="hint" th:if="${entry != null}">Last saved by <strong th:text="${entry.updatedBy}"></strong> on <span th:text="${#temporals.format(entry.updatedAt, 'dd MMM yyyy, hh:mm a')}"></span>.</p>
+    <p class="hint">This is one daily confirmation for each activity. Detailed sterilization cycle records and patient-specific lab tracking can be added later.</p>
+</section></main></body></html>

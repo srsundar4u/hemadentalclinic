@@ -1,6 +1,7 @@
 package com.dentalclinic;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import jakarta.validation.constraints.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -19,6 +20,22 @@ public class PatientForm {
 
     @Size(max = 500, message = "Address must be 500 characters or fewer.")
     private String address;
+
+    @Pattern(regexp = "MALE|FEMALE|OTHER", message = "Choose a valid sex.")
+    private String sex;
+    @DecimalMin(value = "0.01", message = "Weight must be greater than zero.")
+    @Digits(integer = 4, fraction = 2, message = "Weight must be at most 9999.99 kg with up to two decimal places.")
+    private BigDecimal weightKg;
+    @DecimalMin(value = "0.01", message = "Height must be greater than zero.")
+    @Digits(integer = 4, fraction = 2, message = "Height must be at most 9999.99 cm with up to two decimal places.")
+    private BigDecimal heightCm;
+
+    public String getSex() { return sex; }
+    public void setSex(String value) { sex = value == null || value.isBlank() ? null : value; }
+    public BigDecimal getWeightKg() { return weightKg; }
+    public void setWeightKg(BigDecimal value) { weightKg = value; }
+    public BigDecimal getHeightCm() { return heightCm; }
+    public void setHeightCm(BigDecimal value) { heightCm = value; }
 
     public String getFullName() { return fullName; }
     public void setFullName(String value) { fullName = value == null ? null : value.trim(); }

@@ -19,6 +19,9 @@ class PatientRepositoryTest {
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V1__create_clinic_tables.sql")).execute(dataSource);
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V2__create_consultations.sql")).execute(dataSource);
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V3__add_prescription.sql")).execute(dataSource);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V4__add_billing.sql")).execute(dataSource);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V5__create_daily_checks.sql")).execute(dataSource);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V6__add_patient_details.sql")).execute(dataSource);
         patients = new PatientRepository(new JdbcTemplate(dataSource));
     }
 
@@ -82,6 +85,70 @@ class PatientRepositoryTest {
         var completed = visits.find(id).orElseThrow();
         assertTrue(completed.completed());
         assertFalse(visits.save(id, completed.notes(), now, false));
+    }
+
+    @Test
+    void billingPersistsPartialPaymentsWithoutMultiplyingTotals() {
+        var patient = new PatientForm(); patient.setFullName("Synthetic Patient"); patient.setPhone("9876543210");
+        long patientId = patients.create(patient);
+        var jdbc = new JdbcTemplate(dataSource);
+        var appointments = new AppointmentRepository(jdbc);
+        var booking = new AppointmentForm(); booking.setPatientId(patientId);
+        var now = java.time.LocalDateTime.now().withNano(0); booking.setStartsAt(now); booking.setDurationMinutes(30);
+        long id = appointments.create(booking); appointments.changeStatus(id, "COMPLETED", now);
+        var repository = new BillingRepository(jdbc);
+        var charge = new ChargeForm(); charge.setDescription("Synthetic charge"); charge.setAmount(new java.math.BigDecimal("500.00"));
+        charge.setRequestToken(java.util.UUID.randomUUID().toString()); repository.addCharge(id, charge, now);
+        charge.setRequestToken(java.util.UUID.randomUUID().toString()); repository.addCharge(id, charge, now);
+        var payment = new PaymentForm(); payment.setAmount(new java.math.BigDecimal("200.00")); payment.setMethod("UPI");
+        payment.setRequestToken(java.util.UUID.randomUUID().toString()); repository.addPayment(id, payment, now);
+        payment.setRequestToken(java.util.UUID.randomUUID().toString()); repository.addPayment(id, payment, now);
+        assertEquals(0, repository.summary(id).balance().compareTo(new java.math.BigDecimal("600.00")));
+        assertEquals(0, repository.forPatient(patientId).balance().compareTo(new java.math.BigDecimal("600.00")));
+        assertEquals(2, repository.payments(id).size()); assertEquals(2, repository.charges(id).size());
+        assertTrue(repository.paymentRecorded(payment.getRequestToken()));
+        assertEquals(1, repository.list(Long.toString(patientId)).size());
+        assertEquals(0, new DashboardService(jdbc).totals(now.toLocalDate()).collections().compareTo(new java.math.BigDecimal("400.00")));
+    }
+
+    @Test
+    void dailyChecksPersistByDateAndRejectStaleSaves() {
+        var repository = new DailyCheckRepository(new JdbcTemplate(dataSource));
+        var date = java.time.LocalDate.of(2026, 10, 9);
+        var now = date.atTime(16, 0);
+        var form = new DailyCheckForm(); form.setDate(date); form.setSterilizationStatus("DONE");
+        form.setLabStatus("PENDING"); form.setRemarks("Synthetic lab work pending");
+        assertTrue(repository.save(form, "receptionist", now));
+        assertFalse(repository.save(form, "dentist", now));
+        var saved = repository.find(date).orElseThrow();
+        assertEquals("DONE", saved.form().getSterilizationStatus());
+        assertEquals("PENDING", saved.form().getLabStatus());
+        assertEquals("receptionist", saved.updatedBy());
+        saved.form().setLabStatus("DONE");
+        assertTrue(repository.save(saved.form(), "dentist", now.plusHours(1)));
+        assertFalse(repository.save(saved.form(), "receptionist", now.plusHours(2)));
+        assertEquals("dentist", repository.find(date).orElseThrow().updatedBy());
+        assertTrue(repository.find(date.plusDays(1)).isEmpty());
+        var next = new DailyCheckForm(); next.setDate(date.plusDays(1));
+        assertTrue(repository.save(next, "dentist", now.plusDays(1)));
+        assertEquals("PENDING", repository.find(date.plusDays(1)).orElseThrow().form().getLabStatus());
+        assertEquals("DONE", repository.find(date).orElseThrow().form().getLabStatus());
+    }
+
+    @Test
+    void patientSexAndMeasurementsCanBeSavedEditedAndCleared() {
+        var form = new PatientForm(); form.setFullName("Synthetic Patient"); form.setPhone("9876543210");
+        form.setSex("FEMALE"); form.setWeightKg(new java.math.BigDecimal("62.50")); form.setHeightCm(new java.math.BigDecimal("165.25"));
+        long id = patients.create(form);
+        var patient = patients.find(id).orElseThrow();
+        assertEquals("FEMALE", patient.sex());
+        assertEquals(0, patient.weightKg().compareTo(new java.math.BigDecimal("62.50")));
+        assertEquals(0, patient.heightCm().compareTo(new java.math.BigDecimal("165.25")));
+        form.setWeightKg(new java.math.BigDecimal("63.00")); assertTrue(patients.update(id, form));
+        assertEquals(0, patients.find(id).orElseThrow().weightKg().compareTo(new java.math.BigDecimal("63.00")));
+        form.setSex(""); form.setWeightKg(null); form.setHeightCm(null); assertTrue(patients.update(id, form));
+        patient = patients.find(id).orElseThrow();
+        assertNull(patient.sex()); assertNull(patient.weightKg()); assertNull(patient.heightCm());
     }
 
     @Test

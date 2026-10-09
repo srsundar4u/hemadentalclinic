@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Billing and payments | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"></head>
+<body><main><p class="brand">Dr Hemashree's Dental Studio</p><section class="card">
+    <nav><a th:href="@{/}">Dashboard</a> · <a th:href="@{/patients}">Patients</a> · <a th:href="@{/appointments}">Appointments</a></nav>
+    <h1>Billing and payments</h1>
+    <form th:action="@{/billing}" method="get"><label for="q">Search completed visits by patient name or ID</label><div class="search-row"><input id="q" name="q" type="search" th:value="${query}"><button type="submit">Search</button><a th:href="@{/billing}">Clear</a></div></form>
+    <p class="hint">Showing up to 100 completed visits. Open a visit to record charges and payments.</p>
+    <p th:if="${#lists.isEmpty(bills)}">No completed visits match your search.</p>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(bills)}"><table><thead><tr><th>Visit</th><th>Patient</th><th>Charged</th><th>Paid</th><th>Balance</th></tr></thead><tbody>
+    <tr th:each="bill : ${bills}"><td><a th:href="@{/billing/{id}(id=${bill['id']})}" th:text="${bill['starts_at']}"></a></td><td th:text="${bill['full_name']}"></td><td th:text="${'₹' + #numbers.formatDecimal(bill['charged'], 1, 'COMMA', 2, 'POINT')}"></td><td th:text="${'₹' + #numbers.formatDecimal(bill['paid'], 1, 'COMMA', 2, 'POINT')}"></td><td th:text="${'₹' + #numbers.formatDecimal(bill['charged'] - bill['paid'], 1, 'COMMA', 2, 'POINT')}"></td></tr>
+    </tbody></table></div>
+</section></main></body></html>

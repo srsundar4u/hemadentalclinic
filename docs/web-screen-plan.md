@@ -25,6 +25,7 @@ Status: updated with the user's dashboard and patient navigation requirements. R
 | Visit / consultation | No | Yes | Record complaint, relevant history/allergies, examination notes, treatment performed and follow-up recommendation; save draft or complete visit |
 | Billing and payments | Yes | Yes | Record treatment charge descriptions and amounts, payment date/method/amount; show total charges, total paid and outstanding balance; record later payments |
 | Daily summary | Yes, operational and payment information | Yes | Review selected day's bookings, completed visits, payments received that day and outstanding balances; no clinical-note access for receptionist |
+| Daily checks | Yes | Yes | One page for daily sterilization and lab-work-sent status, optional remarks, selected date and last-saving account/time; extensible later |
 
 These are logical screens, not necessarily separate pages for every operation. Create/edit forms share a template. Patient profile sections and appointment details may use tabs or panels.
 
@@ -70,6 +71,8 @@ Payment methods for initial version: Cash, UPI, Card. Record payments only; no p
 Backup and restore verification are prerequisites for real clinic use, even though a backup management screen is deferred. Use synthetic data while building.
 
 ## Suggested implementation order
+
+Before Daily summary, the user requested a single Daily checks page containing sterilization and lab-work-sent confirmations. Detailed cycle and patient-specific lab tracking are deferred. Each date starts Pending; past entries are retained but pending items do not automatically carry forward.
 
 The user added a Prescription tab to Consultation / Treatment: doctor-entered text, saving with the visit and a dentist-only print view. Drafts are labelled; completed prescriptions can be reprinted.
 
