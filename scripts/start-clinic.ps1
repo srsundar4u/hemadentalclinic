@@ -1,5 +1,6 @@
 param(
     [switch]$UseIntelliJCredentials,
+    [switch]$PublicHttps,
     [string]$JavaHome = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
 )
 $ErrorActionPreference = 'Stop'
@@ -37,7 +38,11 @@ try {
             finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($clinicPointer) }
         }
     }
-    $clinicProcess = Start-Process -FilePath $clinicJava -ArgumentList @('-jar', ('"' + $clinicJar + '"')) -WorkingDirectory $clinicRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $clinicDeployment 'server.log') -RedirectStandardError (Join-Path $clinicDeployment 'server-error.log') -PassThru
+    $clinicArguments = @('-jar', ('"' + $clinicJar + '"'))
+    if ($PublicHttps) {
+        $clinicArguments += @('--server.forward-headers-strategy=native', '--server.servlet.session.cookie.secure=true')
+    }
+    $clinicProcess = Start-Process -FilePath $clinicJava -ArgumentList $clinicArguments -WorkingDirectory $clinicRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $clinicDeployment 'server.log') -RedirectStandardError (Join-Path $clinicDeployment 'server-error.log') -PassThru
     $clinicProcess.Id | Set-Content (Join-Path $clinicDeployment 'server.pid')
     for ($clinicAttempt = 0; $clinicAttempt -lt 60; $clinicAttempt++) {
         Start-Sleep -Seconds 1
