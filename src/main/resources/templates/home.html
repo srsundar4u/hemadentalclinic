@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dr Hemshree's Dental Studio</title>
+    <link rel="stylesheet" th:href="@{/css/clinic.css}">
+</head>
+<body>
+<main>
+    <p class="brand">Dental Clinic Management</p>
+    <section class="card">
+        <h1>Welcome to Dr Hemshree's Dental Studio</h1>
+        <p>Signed in as <strong th:text="${username}">staff</strong>.</p>
+        <p>Your staff login is working. The dashboard and patient screens will be added next.</p>
+        <p class="hint">Use fictional patient information while developing this application.</p>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Sign out</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

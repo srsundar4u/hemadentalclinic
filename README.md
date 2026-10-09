@@ -4,7 +4,7 @@ A Java learning project for a dentist and receptionist. The first version will r
 
 ## Milestone 1: start the application
 
-This starter serves a welcome page and verifies a PostgreSQL connection on startup. It does not yet have login or patient records. Complete the database setup below before running the current version.
+The application now has staff login, a protected welcome page and PostgreSQL connection verification on startup. Patient screens are next. Complete the database and staff account setup below before running the current version.
 
 1. Install Temurin JDK 21 for Windows from https://adoptium.net/temurin/releases/?version=21&os=windows. Enable the installer options for PATH and JAVA_HOME.
 2. Install IntelliJ IDEA from https://www.jetbrains.com/idea/download/. Its free core Java features are sufficient for this milestone.
@@ -41,9 +41,33 @@ Troubleshooting: a missing `CLINIC_DB_PASSWORD` means the variable was not set i
 - `pom.xml` describes the project, Java version, libraries, and build plugin. Maven downloads those libraries.
 - `ClinicApplication.java` contains the Java entry point. `@SpringBootApplication` enables Spring Boot configuration, and `SpringApplication.run` starts the application and embedded web server.
 - `application.properties` configures the server. For now it accepts connections only from this laptop on port 8080.
-- `static/index.html` is the home page automatically served by Spring Boot. It uses HTML and CSS; there is no Java controller yet.
+- The original milestone used `static/index.html`. Login now uses `PageController` and templates: `templates/login.html` and `templates/home.html`. The static index was removed so there is one home page to maintain.
 
-Exercise: change the welcome heading, restart the application, and refresh the browser. Explain which file controls the page and which file starts the server.
+Exercise: change the welcome heading in `templates/home.html`, restart the application, and refresh the browser. Explain which file controls the page and which file starts the server.
+
+## Milestone 3: staff login
+
+Reload Maven in IntelliJ. In Run > Edit Configurations > ClinicApplication > Environment variables, keep `CLINIC_DB_PASSWORD` and add:
+
+| Variable | Value |
+| --- | --- |
+| `CLINIC_DENTIST_PASSWORD` | Your chosen password for username `dentist` |
+| `CLINIC_RECEPTIONIST_PASSWORD` | Your chosen password for username `receptionist` |
+
+These are application login passwords, separate from PostgreSQL's `clinic_app` password. Do not send passwords in chat or store them in tracked files. Leave Store as project file unchecked. There are no default staff passwords; missing variables prevent startup.
+
+Stop the application and start it again. If an old static welcome page persists, use Build > Rebuild Project to remove stale build output. Visit http://localhost:8080: you should be redirected to `/login`. Test each username with its configured password. A wrong password displays an error. Sign out returns to the login page; opening `/` again requires sign-in.
+
+How it works:
+
+1. `SecurityConfiguration` protects application URLs, permits the login page and CSS, and configures Spring Security form login and logout.
+2. `PageController` chooses the login/home template. The login submission is handled by Spring Security, not a controller that manually compares passwords.
+3. `InMemoryUserDetailsManager` provides two accounts with DENTIST and RECEPTIONIST roles. Passwords are encoded with BCrypt during startup. Accounts are recreated from environment variables after a restart; account storage in PostgreSQL and password management are deferred.
+4. Successful login creates a session. Thymeleaf inserts a CSRF token into POST forms, including logout. CSRF protection remains enabled.
+
+Both roles currently access the protected welcome page. Per-screen permissions will be added as the respective screens are built. Development is still restricted to the laptop.
+
+Automated login tests use fictional test passwords and mock database access. They verify anonymous redirects, both staff logins, invalid credentials, logout and CSRF enforcement without needing your database password. Run the Maven `test` goal from IntelliJ to execute them.
 
 ## Planned increments
 

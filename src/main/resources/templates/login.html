@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Staff login | Dr Hemshree's Dental Studio</title>
+    <link rel="stylesheet" th:href="@{/css/clinic.css}">
+</head>
+<body>
+<main class="login">
+    <p class="brand">Dr Hemshree's Dental Studio</p>
+    <section class="card">
+        <h1>Staff login</h1>
+        <p>Sign in to access the clinic.</p>
+        <p class="error" role="alert" th:if="${param.error}">Incorrect username or password. Please try again.</p>
+        <p class="success" role="status" th:if="${param.logout}">You have signed out.</p>
+        <form th:action="@{/login}" method="post">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="submit">Sign in</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>
