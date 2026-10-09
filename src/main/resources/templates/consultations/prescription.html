@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Prescription | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"><link rel="stylesheet" th:href="@{/css/prescription.css}"><script th:src="@{/js/print-prescription.js}" defer></script></head>
+<body><main class="prescription-page">
+    <div class="print-controls"><a th:href="@{/consultations/{id}(id=${appointment.id})}">← Return to consultation</a><button th:unless="${visit.notes.prescription.isBlank()}" type="button" id="print-prescription">Print / Save as PDF</button><p class="hint">Turn off browser headers and footers in the print dialog if you do not want the page URL on the prescription.</p></div>
+    <article class="prescription-sheet">
+        <header><h1>Dr Hemashree's Dental Studio</h1><h2>Prescription</h2></header>
+        <p th:unless="${visit.completed()}" class="draft-label">DRAFT — visit not completed</p>
+        <dl><dt>Patient</dt><dd th:text="${appointment.patientName}"></dd><dt>Patient ID</dt><dd th:text="${appointment.patientId}"></dd><dt>Visit date</dt><dd th:text="${#temporals.format(appointment.startsAt, 'dd MMM yyyy')}"></dd></dl>
+        <p th:if="${visit.notes.prescription.isBlank()}">No prescription has been saved for this visit.</p>
+        <div class="prescription-text" th:unless="${visit.notes.prescription.isBlank()}" th:text="${visit.notes.prescription}"></div>
+        <footer><p>Doctor's signature: ______________________________</p></footer>
+    </article>
+</main></body></html>

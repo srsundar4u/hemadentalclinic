@@ -17,6 +17,8 @@ class PatientRepositoryTest {
     void setup() {
         dataSource = new SingleConnectionDataSource("jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=PostgreSQL", "sa", "", true);
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V1__create_clinic_tables.sql")).execute(dataSource);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V2__create_consultations.sql")).execute(dataSource);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V3__add_prescription.sql")).execute(dataSource);
         patients = new PatientRepository(new JdbcTemplate(dataSource));
     }
 
@@ -53,6 +55,33 @@ class PatientRepositoryTest {
         assertEquals(100, patients.search("").size());
         assertEquals(id, patients.search("Z Unique").getFirst().id());
         assertEquals(id, patients.search(Long.toString(id)).getFirst().id());
+    }
+
+    @Test
+    void consultationDraftPersistsAndRejectsStaleOrCompletedUpdates() {
+        var patient = new PatientForm(); patient.setFullName("Synthetic Patient"); patient.setPhone("9876543210");
+        long patientId = patients.create(patient);
+        var jdbc = new JdbcTemplate(dataSource);
+        var appointments = new AppointmentRepository(jdbc);
+        var booking = new AppointmentForm(); booking.setPatientId(patientId);
+        var now = java.time.LocalDateTime.now().withNano(0);
+        booking.setStartsAt(now); booking.setDurationMinutes(30);
+        long id = appointments.create(booking);
+        var visits = new ConsultationRepository(jdbc); visits.create(id, now);
+        var form = new ConsultationForm(); form.setComplaint("Synthetic complaint");
+        form.setPrescription("Synthetic prescription line 1\nPatient instructions line 2");
+        assertTrue(visits.save(id, form, now, false));
+        assertFalse(visits.save(id, form, now, false));
+        var saved = visits.find(id).orElseThrow();
+        assertEquals("Synthetic complaint", saved.notes().getComplaint());
+        assertEquals("Synthetic prescription line 1\nPatient instructions line 2", saved.notes().getPrescription());
+        assertEquals(1, saved.notes().getVersion());
+        assertEquals(1, visits.forPatient(patientId).size());
+        saved.notes().setTreatment("Synthetic treatment");
+        assertTrue(visits.save(id, saved.notes(), now, true));
+        var completed = visits.find(id).orElseThrow();
+        assertTrue(completed.completed());
+        assertFalse(visits.save(id, completed.notes(), now, false));
     }
 
     @Test

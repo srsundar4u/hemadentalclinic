@@ -13,6 +13,10 @@
         <h2>Appointments</h2>
         <p th:if="${#lists.isEmpty(appointments)}">No appointments yet.</p>
         <ul th:unless="${#lists.isEmpty(appointments)}"><li th:each="a : ${appointments}"><a th:href="@{/appointments/{id}(id=${a.id})}" th:text="${#temporals.format(a.startsAt, 'dd MMM yyyy, hh:mm a')}"></a> — <span th:text="${#strings.replace(a.status, '_', ' ')}"></span></li></ul>
-        <p class="hint">Visit history and balances will be added with those screens.</p>
+        <section th:if="${dentist}"><h2>Clinical visit history</h2>
+            <p th:if="${#lists.isEmpty(visits)}">No consultation records yet.</p>
+            <ul th:unless="${#lists.isEmpty(visits)}"><li th:each="visit : ${visits}"><a th:href="@{/consultations/{id}(id=${visit.appointmentId})}" th:text="${'Visit for appointment ' + visit.appointmentId}"></a> — <span th:text="${visit.completed() ? 'Completed' : 'Draft'}"></span></li></ul>
+        </section>
+        <p class="hint">Charges, payments and balances will be added with the billing screen.</p>
     </section>
 </main></body></html>

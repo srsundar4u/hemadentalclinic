@@ -13,5 +13,7 @@
             <button type="submit" name="status" value="NO_SHOW">Mark no-show</button>
         </form>
     </div>
-    <p class="hint" th:if="${appointment.status == 'ARRIVED'}">Arrival recorded. Consultation will be available in the next screen.</p>
+    <form th:if="${dentist && appointment.status == 'ARRIVED'}" th:action="@{/consultations/{id}/start(id=${appointment.id})}" method="post"><button type="submit">Start consultation</button></form>
+    <a class="button-link" th:if="${dentist && (appointment.status == 'IN_CONSULTATION' || appointment.status == 'COMPLETED')}" th:href="@{/consultations/{id}(id=${appointment.id})}" th:text="${appointment.status == 'COMPLETED' ? 'View completed visit' : 'Continue consultation'}"></a>
+    <p class="hint" th:if="${!dentist && appointment.status == 'ARRIVED'}">Arrival recorded. The dentist can now start consultation.</p>
 </section></main></body></html>

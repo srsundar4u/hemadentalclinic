@@ -13,9 +13,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class PatientController {
     private final PatientRepository patients;
     private final AppointmentRepository appointments;
+    private final ConsultationRepository consultations;
 
-    public PatientController(PatientRepository patients, AppointmentRepository appointments) {
-        this.patients = patients; this.appointments = appointments;
+    public PatientController(PatientRepository patients, AppointmentRepository appointments, ConsultationRepository consultations) {
+        this.patients = patients; this.appointments = appointments; this.consultations = consultations;
     }
 
     @GetMapping
@@ -54,11 +55,14 @@ public class PatientController {
     }
 
     @GetMapping("/{id}")
-    public String profile(@PathVariable long id, Model model) {
+    public String profile(@PathVariable long id, Model model, org.springframework.security.core.Authentication authentication) {
         var patient = patients.find(id);
         if (patient.isEmpty()) { throw new PatientNotFound(); }
         model.addAttribute("patient", patient.get());
         model.addAttribute("appointments", appointments.forPatient(id));
+        boolean dentist = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DENTIST"));
+        model.addAttribute("dentist", dentist);
+        if (dentist) { model.addAttribute("visits", consultations.forPatient(id)); }
         return "patients/profile";
     }
 

@@ -60,7 +60,8 @@ public class AppointmentController {
     }
 
     @GetMapping("/{id}")
-    public String details(@PathVariable long id, Model model) {
+    public String details(@PathVariable long id, Model model, org.springframework.security.core.Authentication authentication) {
+        model.addAttribute("dentist", authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_DENTIST")));
         model.addAttribute("appointment", require(id)); return "appointments/details";
     }
 

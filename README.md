@@ -101,6 +101,24 @@ The dashboard appointment/arrival cards now open the appointment list with the a
 
 Use a synthetic patient: book a time later today, try an overlapping booking (expect an error), reschedule, mark arrived and check the dashboard arrival total. Test cancellation on another scheduled booking. The tests cover overlap boundaries, rescheduling, state changes, persistence, form rendering and CSRF; the PostgreSQL table lock needs verification on the local PostgreSQL installation.
 
+## Consultation / Treatment screen
+
+Restart the application. Flyway applies V2 to create the consultations table without changing existing patients or appointments. Sign in as dentist, open an arrived appointment and select Start consultation. This changes its status to IN_CONSULTATION. Record complaint, relevant medical history, allergies, examination, treatment and follow-up recommendation/date. Save draft allows incomplete notes. Complete visit requires complaint and treatment, saves everything and changes the appointment to COMPLETED; completed records are read-only.
+
+Follow-up dates cannot be in the past. Recommendations do not automatically create appointments. Use the patient profile's Book appointment action to schedule a follow-up. Clinical visit history links appear only for the dentist. Receptionist requests to consultation URLs are denied by Spring Security, and clinical notes are not loaded into the receptionist's profile view.
+
+`ConsultationController` selects the page and validates form fields. `ConsultationService` enforces the visit lifecycle in a transaction. `ConsultationRepository` saves notes in PostgreSQL. A version number prevents stale browser tabs from overwriting more recent notes; the page asks you to copy notes and reload if another save changed the visit. Start is a POST action, so merely opening a page does not change an appointment. State changes preserve the original arrival timestamp.
+
+Manual check: use a synthetic arrived appointment, save a draft, reopen it, complete with complaint/treatment and confirm read-only notes and COMPLETED status. Sign in as receptionist to verify the clinical links are absent and consultation URLs are forbidden. Account credentials stay the same. Billing follows later.
+
+### Prescription tab and printing
+
+Restart to apply V3, which adds a prescription field to existing consultations with an empty default. The consultation page has Consultation / Treatment and Prescription tabs. Enter clinician-authored medicine details and instructions in the Prescription tab. Save draft and Complete visit save both tabs together. Save and print prescription saves the draft and redirects to a saved-text print preview. Empty prescriptions cannot use Save and print. JavaScript enhances tabs; without it both sections remain visible.
+
+Use Print / Save as PDF in the preview to open the browser's print dialog. Print styling targets A4 and hides controls. The printout includes only the clinic name, patient name/ID, visit date, prescription and signature space; it does not include medical history, allergies or examination notes. Drafts have a visible DRAFT label. Completed visits are read-only and can reprint their saved prescription. Enter the prescription before completing the visit. The software does not generate medication advice or a doctor's signature.
+
+This is a basic demo prescription layout. Clinic address and professional registration details have not been supplied; they are not invented. Verify long prescriptions in browser print preview for pagination. Disabling browser headers/footers removes the URL/date added by the browser. Prescription URLs remain dentist-only.
+
 ## Planned increments
 
 1. Start the server and display the home page.

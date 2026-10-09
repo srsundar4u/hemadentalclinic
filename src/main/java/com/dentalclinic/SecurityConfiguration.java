@@ -17,6 +17,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(access -> access
                 .requestMatchers("/login", "/css/**", "/error").permitAll()
+                .requestMatchers("/consultations/**").hasRole("DENTIST")
                 .anyRequest().authenticated())
             .formLogin(form -> form.loginPage("/login")
                 .defaultSuccessUrl("/", true).permitAll())

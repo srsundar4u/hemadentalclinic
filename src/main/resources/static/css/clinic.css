@@ -33,6 +33,10 @@ textarea { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid #87
 select { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid #879fa6; border-radius: 6px; background: white; }
 .check-label { font-weight: normal; } .check-label input { width: auto; }
 .status-actions { flex-wrap: wrap; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid #dbe7ea; margin-bottom: 16px; }
+.tabs[hidden], [role="tabpanel"][hidden] { display: none; }
+.tabs button { background: #e4efed; color: #18353d; margin-top: 0; }
+.tabs button[aria-selected="true"] { background: #087c78; color: white; }
 dt { font-weight: 600; } dd { margin: 0 0 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 520px) { .search-row { flex-wrap: wrap; } .search-row input { flex-basis: 100%; } }
 table { width: 100%; border-collapse: collapse; text-align: left; }

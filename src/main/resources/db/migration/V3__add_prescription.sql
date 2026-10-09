@@ -1,0 +1,1 @@
+ALTER TABLE consultations ADD COLUMN prescription VARCHAR(8000) NOT NULL DEFAULT '';

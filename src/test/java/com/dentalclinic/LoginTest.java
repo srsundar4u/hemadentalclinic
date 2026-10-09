@@ -29,6 +29,8 @@ class LoginTest {
     @MockitoBean PatientRepository patients;
     @MockitoBean AppointmentRepository appointments;
     @MockitoBean AppointmentService appointmentService;
+    @MockitoBean ConsultationRepository consultations;
+    @MockitoBean ConsultationService consultationService;
 
     @org.junit.jupiter.api.BeforeEach
     void dashboardTotals() {
@@ -150,6 +152,59 @@ class LoginTest {
             .param("startsAt", start.toString()).param("durationMinutes", "30"))
             .andExpect(status().isOk()).andExpect(model().attributeHasFieldErrors("appointmentForm", "startsAt"))
             .andExpect(content().string(containsString("An appointment already exists")));
+    }
+
+    @Test
+    void consultationIsDentistOnlyAndNotesCanBeSaved() throws Exception {
+        var dentist = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("dentist").roles("DENTIST");
+        var reception = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("receptionist").roles("RECEPTIONIST");
+        var now = java.time.LocalDateTime.now();
+        var appointment = new Appointment(4, 7, "Synthetic Patient", now, 30, "Checkup", "IN_CONSULTATION", now);
+        var notes = new ConsultationForm(); notes.setComplaint("Synthetic complaint");
+        org.mockito.Mockito.when(appointments.find(4)).thenReturn(java.util.Optional.of(appointment));
+        org.mockito.Mockito.when(consultations.find(4)).thenReturn(java.util.Optional.of(new Consultation(4, notes, now, null)));
+        mvc.perform(get("/consultations/4")).andExpect(status().is3xxRedirection());
+        mvc.perform(get("/consultations/4").with(reception)).andExpect(status().isForbidden());
+        mvc.perform(post("/consultations/4/start").with(reception).with(csrf())).andExpect(status().isForbidden());
+        mvc.perform(post("/consultations/4").with(reception).with(csrf()).param("action", "draft")).andExpect(status().isForbidden());
+        mvc.perform(get("/consultations/4").with(dentist)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("Synthetic complaint")))
+            .andExpect(content().string(containsString("Save draft")));
+        mvc.perform(get("/appointments/4").with(reception)).andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.not(containsString("Continue consultation"))));
+        mvc.perform(post("/consultations/4/start").with(dentist).with(csrf())).andExpect(redirectedUrl("/consultations/4"));
+        mvc.perform(post("/consultations/4").with(dentist).with(csrf()).param("action", "draft").param("complaint", "Synthetic complaint"))
+            .andExpect(redirectedUrl("/consultations/4"));
+        mvc.perform(post("/consultations/4").with(dentist).param("action", "draft")).andExpect(status().isForbidden());
+        org.mockito.Mockito.when(consultations.find(4)).thenReturn(java.util.Optional.of(new Consultation(4, notes, now, now)));
+        mvc.perform(get("/consultations/4").with(dentist)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("Completed visit — read-only")))
+            .andExpect(content().string(org.hamcrest.Matchers.not(containsString("Save draft"))));
+    }
+
+    @Test
+    void prescriptionPrintingUsesSavedTextAndIsDentistOnly() throws Exception {
+        var dentist = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("dentist").roles("DENTIST");
+        var reception = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("receptionist").roles("RECEPTIONIST");
+        var now = java.time.LocalDateTime.now();
+        org.mockito.Mockito.when(appointments.find(4)).thenReturn(java.util.Optional.of(new Appointment(4, 7, "Synthetic Patient", now, 30, "", "IN_CONSULTATION", now)));
+        var notes = new ConsultationForm(); notes.setPrescription("Synthetic prescription\nInstructions <script>alert(1)</script>");
+        org.mockito.Mockito.when(consultations.find(4)).thenReturn(java.util.Optional.of(new Consultation(4, notes, now, null)));
+        mvc.perform(get("/consultations/4/prescription").with(reception)).andExpect(status().isForbidden());
+        mvc.perform(get("/consultations/4/prescription").with(dentist)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("Synthetic prescription")))
+            .andExpect(content().string(containsString("DRAFT")))
+            .andExpect(content().string(org.hamcrest.Matchers.not(containsString("<script>alert(1)</script>"))))
+            .andExpect(content().string(org.hamcrest.Matchers.not(containsString("Relevant medical history"))));
+        mvc.perform(post("/consultations/4").with(dentist).with(csrf()).param("action", "print").param("prescription", "Synthetic prescription"))
+            .andExpect(redirectedUrl("/consultations/4/prescription"));
+        mvc.perform(post("/consultations/4").with(dentist).with(csrf()).param("action", "print").param("prescription", " "))
+            .andExpect(status().isOk()).andExpect(model().attributeHasFieldErrors("consultationForm", "prescription"));
+        org.mockito.Mockito.when(consultations.find(4)).thenReturn(java.util.Optional.of(new Consultation(4, notes, now, now)));
+        mvc.perform(get("/consultations/4").with(dentist)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("Print prescription")));
+        mvc.perform(get("/consultations/4/prescription").with(dentist)).andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.not(containsString("DRAFT"))));
     }
 
     @Test

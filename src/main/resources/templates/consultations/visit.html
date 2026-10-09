@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Consultation / Treatment | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"><script th:src="@{/js/consultation-tabs.js}" defer></script></head>
+<body><main><p class="brand">Dr Hemashree's Dental Studio</p><section class="card">
+    <nav><a th:href="@{/appointments/{id}(id=${appointment.id})}">← Appointment</a> · <a th:href="@{/patients/{id}(id=${appointment.patientId})}">Patient profile</a></nav>
+    <h1>Consultation / Treatment</h1>
+    <p><strong th:text="${appointment.patientName}"></strong> · <span th:text="${#temporals.format(appointment.startsAt, 'dd MMM yyyy, hh:mm a')}"></span></p>
+    <p th:text="${visit.completed() ? 'Completed visit — read-only' : 'Draft — consultation in progress'}"></p>
+    <p class="success" role="status" th:if="${message}" th:text="${message}"></p>
+    <form th:action="@{/consultations/{id}(id=${appointment.id})}" th:object="${consultationForm}" method="post">
+        <div class="error" role="alert" th:if="${#fields.hasErrors('*')}"><p>Please review the notes below.</p><p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p></div>
+        <input type="hidden" th:field="*{version}">
+        <div class="tabs" role="tablist" aria-label="Visit sections" hidden id="visit-tabs">
+            <button type="button" role="tab" id="clinical-tab" aria-controls="clinical-panel" aria-selected="true">Consultation / Treatment</button>
+            <button type="button" role="tab" id="prescription-tab" aria-controls="prescription-panel" aria-selected="false" tabindex="-1">Prescription</button>
+        </div>
+        <section id="clinical-panel" role="tabpanel" aria-labelledby="clinical-tab">
+        <label for="complaint">Presenting complaint</label><textarea th:field="*{complaint}" rows="3" maxlength="4000" th:readonly="${visit.completed()}"></textarea><p class="field-error" th:errors="*{complaint}"></p>
+        <label for="medicalHistory">Relevant medical history</label><textarea th:field="*{medicalHistory}" rows="3" maxlength="4000" th:readonly="${visit.completed()}"></textarea><p class="field-error" th:errors="*{medicalHistory}"></p>
+        <label for="allergies">Allergies</label><textarea th:field="*{allergies}" rows="2" maxlength="4000" th:readonly="${visit.completed()}"></textarea><p class="field-error" th:errors="*{allergies}"></p>
+        <label for="examination">Examination notes</label><textarea th:field="*{examination}" rows="4" maxlength="4000" th:readonly="${visit.completed()}"></textarea><p class="field-error" th:errors="*{examination}"></p>
+        <label for="treatment">Treatment performed / plan</label><textarea th:field="*{treatment}" rows="4" maxlength="4000" th:readonly="${visit.completed()}"></textarea><p class="field-error" th:errors="*{treatment}"></p>
+        <label for="followUp">Follow-up recommendation</label><textarea th:field="*{followUp}" rows="3" maxlength="4000" th:readonly="${visit.completed()}"></textarea><p class="field-error" th:errors="*{followUp}"></p>
+        <label for="followUpDate">Recommended follow-up date (optional)</label><input th:field="*{followUpDate}" type="date" th:readonly="${visit.completed()}"><p class="field-error" th:errors="*{followUpDate}"></p>
+        <p class="hint">A follow-up recommendation does not create a booking. Book the next appointment separately.</p>
+        </section>
+        <section id="prescription-panel" role="tabpanel" aria-labelledby="prescription-tab">
+            <h2>Prescription</h2>
+            <label for="prescription">Medicines and instructions</label>
+            <textarea th:field="*{prescription}" rows="10" maxlength="8000" th:readonly="${visit.completed()}" placeholder="Enter each medicine with its strength, dose, route, frequency, duration and any patient instructions."></textarea>
+            <p class="field-error" th:errors="*{prescription}"></p>
+            <p class="hint">Save and print saves all current visit notes and opens the saved prescription for printing. The browser can print to paper or save as PDF.</p>
+            <button th:unless="${visit.completed()}" type="submit" name="action" value="print">Save and print prescription</button>
+            <a class="button-link" th:if="${visit.completed() && !consultationForm.prescription.isBlank()}" th:href="@{/consultations/{id}/prescription(id=${appointment.id})}">Print prescription</a>
+            <p th:if="${visit.completed() && consultationForm.prescription.isBlank()}">No prescription was recorded for this visit.</p>
+        </section>
+        <div th:unless="${visit.completed()}"><p class="hint">Complaint and treatment are required to complete the visit. Complete visit saves the notes and makes this record read-only.</p><div class="actions"><button type="submit" name="action" value="draft">Save draft</button><button type="submit" name="action" value="complete">Complete visit</button></div></div>
+        <p class="hint" th:text="${'Last saved: ' + #temporals.format(visit.updatedAt, 'dd MMM yyyy, hh:mm a')}"></p>
+    </form>
+</section></main></body></html>

@@ -1,0 +1,17 @@
+.prescription-page { max-width: 900px; }
+.prescription-sheet { background: white; padding: 40px; border: 1px solid #dbe7ea; }
+.prescription-sheet header { border-bottom: 2px solid #087c78; margin-bottom: 24px; }
+.prescription-sheet h1 { font-size: 28px; }
+.prescription-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; min-height: 200px; }
+.prescription-sheet footer { margin-top: 48px; break-inside: avoid; }
+.draft-label { font-weight: bold; }
+.print-controls { margin-bottom: 24px; }
+@page { size: A4; margin: 18mm; }
+@media print {
+    body { background: white; color: black; font-size: 12pt; }
+    .print-controls { display: none; }
+    .prescription-page { margin: 0; padding: 0; max-width: none; }
+    .prescription-sheet { border: 0; padding: 0; }
+    .prescription-sheet header { break-after: avoid; }
+    .prescription-text { min-height: 0; }
+}

@@ -62,7 +62,7 @@ Payment methods for initial version: Cash, UPI, Card. Record payments only; no p
 
 ## Deferred features
 
-- Excel import/export, automated reminders, prescriptions and printable invoices.
+- Excel import/export, automated reminders and printable invoices.
 - Dental tooth chart, X-rays/uploads, inventory, insurance and payment gateways.
 - Multiple dentists/branches, patient accounts, staff administration UI and analytics.
 - Android client, cloud deployment and offline mobile sync.
@@ -70,6 +70,8 @@ Payment methods for initial version: Cash, UPI, Card. Record payments only; no p
 Backup and restore verification are prerequisites for real clinic use, even though a backup management screen is deferred. Use synthetic data while building.
 
 ## Suggested implementation order
+
+The user added a Prescription tab to Consultation / Treatment: doctor-entered text, saving with the visit and a dentist-only print view. Drafts are labelled; completed prescriptions can be reprinted.
 
 1. Patient list, patient form and basic patient profile.
 2. Appointment list, form and details, plus numeric dashboard cards with links to details.
