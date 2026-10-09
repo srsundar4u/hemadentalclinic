@@ -4,7 +4,7 @@ A Java learning project for a dentist and receptionist. The first version will r
 
 ## Milestone 1: start the application
 
-This starter serves a welcome page. It does not yet have a database, login, or patient records.
+This starter serves a welcome page and verifies a PostgreSQL connection on startup. It does not yet have login or patient records. Complete the database setup below before running the current version.
 
 1. Install Temurin JDK 21 for Windows from https://adoptium.net/temurin/releases/?version=21&os=windows. Enable the installer options for PATH and JAVA_HOME.
 2. Install IntelliJ IDEA from https://www.jetbrains.com/idea/download/. Its free core Java features are sufficient for this milestone.
@@ -15,6 +15,26 @@ This starter serves a welcome page. It does not yet have a database, login, or p
 7. Stop the application using the IDE's Stop button when finished.
 
 In a new PowerShell window, `java -version` and `javac -version` should both report version 21 after installation. A separate Maven installation is not required when using IntelliJ's bundled Maven.
+
+## Milestone 2: connect PostgreSQL
+
+Create the local `dental_clinic` database and a login named `clinic_app`, with that login as database owner. PostgreSQL should listen on port 5432.
+
+In IntelliJ:
+
+1. Reload the Maven project after changes to `pom.xml` so the JDBC starter and PostgreSQL driver are downloaded.
+2. Open Run > Edit Configurations and select the configuration for `ClinicApplication`.
+3. Find Environment variables (use Modify options if it is hidden). Add a variable named `CLINIC_DB_PASSWORD`, with the password you chose for `clinic_app` as its value. Use the variables table to avoid separator issues in passwords.
+4. Apply the changes, stop the existing application, and run it again.
+5. Look for `Database connection verified: dental_clinic` in the Run console. Then open http://localhost:8080.
+
+The password stays in your local IntelliJ configuration, which is ignored by Git. Do not paste it into source files or chat. A `.env` file is not automatically loaded by this project.
+
+`spring.datasource.url` identifies the database host, port, and database name. `spring.datasource.username` selects the login. `${CLINIC_DB_PASSWORD}` reads the password from the environment. The JDBC starter supplies `JdbcTemplate` and a connection pool; the PostgreSQL driver lets Java communicate with PostgreSQL.
+
+`DatabaseConnectionCheck` is a Spring component. Spring passes a configured `JdbcTemplate` into its constructor (dependency injection). Its `CommandLineRunner.run` method runs during startup and executes a read-only SQL query. If the connection fails, startup fails rather than silently displaying an unconnected home page. This check creates no tables and changes no records.
+
+Troubleshooting: a missing `CLINIC_DB_PASSWORD` means the variable was not set in the selected run configuration. Authentication failure usually means the role password is incorrect. Connection refused means PostgreSQL is stopped or uses a different port. A nonexistent database means the database name or server does not match your pgAdmin setup.
 
 ## Understand the first milestone
 
