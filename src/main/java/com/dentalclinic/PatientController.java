@@ -12,14 +12,26 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/patients")
 public class PatientController {
     private final PatientRepository patients;
+    private final AppointmentRepository appointments;
 
-    public PatientController(PatientRepository patients) { this.patients = patients; }
+    public PatientController(PatientRepository patients, AppointmentRepository appointments) {
+        this.patients = patients; this.appointments = appointments;
+    }
 
     @GetMapping
     public String list(@RequestParam(defaultValue = "") String q, Model model) {
         model.addAttribute("query", q);
         model.addAttribute("patients", patients.search(q));
         return "patients/list";
+    }
+
+    public record PatientOption(long id, String fullName, String phone) {}
+
+    @GetMapping("/options")
+    @ResponseBody
+    public java.util.List<PatientOption> options(@RequestParam(defaultValue = "") String q) {
+        return patients.search(q).stream().limit(20)
+            .map(patient -> new PatientOption(patient.id(), patient.fullName(), patient.phone())).toList();
     }
 
     @GetMapping("/new")
@@ -46,6 +58,7 @@ public class PatientController {
         var patient = patients.find(id);
         if (patient.isEmpty()) { throw new PatientNotFound(); }
         model.addAttribute("patient", patient.get());
+        model.addAttribute("appointments", appointments.forPatient(id));
         return "patients/profile";
     }
 

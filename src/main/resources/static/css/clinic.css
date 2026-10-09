@@ -30,6 +30,9 @@ a:focus-visible { outline: 3px solid #087c78; outline-offset: 3px; }
 .actions button { margin-top: 0; }
 textarea { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid #879fa6; border-radius: 6px; }
 .field-error { color: #922b25; font-size: 15px; }
+select { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid #879fa6; border-radius: 6px; background: white; }
+.check-label { font-weight: normal; } .check-label input { width: auto; }
+.status-actions { flex-wrap: wrap; }
 dt { font-weight: 600; } dd { margin: 0 0 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 520px) { .search-row { flex-wrap: wrap; } .search-row input { flex-basis: 100%; } }
 table { width: 100%; border-collapse: collapse; text-align: left; }

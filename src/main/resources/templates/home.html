@@ -13,12 +13,12 @@
         <h1>Dr Hemashree's Dental Studio</h1>
         <p th:text="${#temporals.format(date, 'dd MMMM yyyy')}">Today's date</p>
         <p>Signed in as <strong th:text="${username}">staff</strong>.</p>
-        <nav aria-label="Main navigation"><a th:href="@{/patients}">Patients</a></nav>
+        <nav aria-label="Main navigation"><a th:href="@{/patients}">Patients</a> · <a th:href="@{/appointments}">Appointments</a></nav>
         <div class="totals">
-            <a class="total" th:href="@{/today/appointments}">
+            <a class="total" th:href="@{/appointments(date=${date})}">
                 <span>Appointments</span><strong th:text="${totals.appointments}">0</strong>
             </a>
-            <a class="total" th:href="@{/today/arrivals}">
+            <a class="total" th:href="@{/appointments(date=${date}, arrivals=true)}">
                 <span>Arrivals</span><strong th:text="${totals.arrivals}">0</strong>
             </a>
             <a class="total" th:href="@{/today/collections}">

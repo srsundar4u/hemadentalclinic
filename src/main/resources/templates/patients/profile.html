@@ -9,6 +9,10 @@
         <h1 th:text="${patient.fullName}"></h1>
         <dl><dt>Patient ID</dt><dd th:text="${patient.id}"></dd><dt>Phone</dt><dd th:text="${patient.phone}"></dd><dt>Date of birth</dt><dd th:text="${patient.dateOfBirth == null ? 'Not provided' : #temporals.format(patient.dateOfBirth, 'dd MMM yyyy')}"></dd><dt>Address</dt><dd th:text="${patient.address == null || patient.address.isBlank() ? 'Not provided' : patient.address}"></dd></dl>
         <a class="button-link" th:href="@{/patients/{id}/edit(id=${patient.id})}">Edit details</a>
-        <p class="hint">Appointments, visit history and balances will be added as we build those screens.</p>
+        <a class="button-link" th:href="@{/appointments/new(patientId=${patient.id})}">Book appointment</a>
+        <h2>Appointments</h2>
+        <p th:if="${#lists.isEmpty(appointments)}">No appointments yet.</p>
+        <ul th:unless="${#lists.isEmpty(appointments)}"><li th:each="a : ${appointments}"><a th:href="@{/appointments/{id}(id=${a.id})}" th:text="${#temporals.format(a.startsAt, 'dd MMM yyyy, hh:mm a')}"></a> — <span th:text="${#strings.replace(a.status, '_', ' ')}"></span></li></ul>
+        <p class="hint">Visit history and balances will be added with those screens.</p>
     </section>
 </main></body></html>

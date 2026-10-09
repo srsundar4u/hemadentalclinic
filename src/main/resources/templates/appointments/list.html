@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Appointments | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"></head>
+<body><main><p class="brand">Dr Hemashree's Dental Studio</p><section class="card">
+    <nav><a th:href="@{/}">Dashboard</a> · <a th:href="@{/patients}">Patients</a></nav>
+    <div class="page-heading"><h1>Appointments</h1><a class="button-link" th:href="@{/appointments/new}">Book appointment</a></div>
+    <form th:action="@{/appointments}" method="get">
+        <label for="date">Date</label><input id="date" name="date" type="date" th:value="${date}" required>
+        <label for="status">Status</label><select id="status" name="status"><option value="">All statuses</option><option th:each="item : ${statuses}" th:value="${item}" th:text="${#strings.replace(item, '_', ' ')}" th:selected="${status == item}"></option></select>
+        <label class="check-label"><input type="checkbox" name="arrivals" value="true" th:checked="${arrivals}"> Checked-in patients only</label>
+        <button type="submit">View appointments</button>
+    </form>
+    <p th:if="${#lists.isEmpty(appointments)}">No appointments match this date and filter.</p>
+    <div class="table-wrap" th:unless="${#lists.isEmpty(appointments)}"><table><thead><tr><th>Time</th><th>Patient</th><th>Duration</th><th>Status</th></tr></thead><tbody>
+        <tr th:each="a : ${appointments}"><td><a th:href="@{/appointments/{id}(id=${a.id})}" th:text="${#temporals.format(a.startsAt, 'hh:mm a')}"></a></td><td><a th:href="@{/patients/{id}(id=${a.patientId})}" th:text="${a.patientName}"></a></td><td th:text="${a.durationMinutes + ' min'}"></td><td th:text="${#strings.replace(a.status, '_', ' ')}"></td></tr>
+    </tbody></table></div>
+</section></main></body></html>

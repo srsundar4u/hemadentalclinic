@@ -91,6 +91,16 @@ Try a fictional patient named Synthetic Patient with phone 9876543210. Save, sea
 
 Tests cover create/search/edit persistence in a separate H2 test database, literal search wildcards, required input, login protection, CSRF, form rendering and unknown patient IDs. Verify saving on local PostgreSQL before committing this milestone.
 
+## Appointment screens
+
+Restart the application. Choose Appointments from the dashboard, or Book appointment on a patient's profile. Pick a future local date/time and a duration from 5 to 240 minutes. The appointment list supports date, status and checked-in filters. Click a time to open appointment details. Scheduled bookings can be rescheduled or cancelled. Arrival is allowed only on the booked date; no-show is allowed only after the start time. Consultation and completion actions come with the next screen.
+
+The dashboard appointment/arrival cards now open the appointment list with the appropriate filter. Patient profiles show their appointment history. The booking patient field searches the database as you type a name, phone or exact patient ID and shows up to 20 suggestions per query. Narrow the search and select a suggestion: typing a name alone does not select a patient. This searches all patients, including those beyond the first 100 in the patient list. JavaScript provides the suggestions; the server validates the selected patient ID again. Rescheduling keeps the original patient.
+
+`AppointmentController` handles pages and validated input. `AppointmentService` checks existing patients, future times, overlapping slots and allowed status changes. `AppointmentRepository` reads/writes PostgreSQL. Its schedule lock runs inside a Spring transaction so simultaneous booking requests cannot reserve overlapping slots. The initial schedule is for one dentist. Adjacent slots are allowed; cancelled/no-show bookings free their slots. Arrived bookings cannot be rescheduled or cancelled in this first flow.
+
+Use a synthetic patient: book a time later today, try an overlapping booking (expect an error), reschedule, mark arrived and check the dashboard arrival total. Test cancellation on another scheduled booking. The tests cover overlap boundaries, rescheduling, state changes, persistence, form rendering and CSRF; the PostgreSQL table lock needs verification on the local PostgreSQL installation.
+
 ## Planned increments
 
 1. Start the server and display the home page.

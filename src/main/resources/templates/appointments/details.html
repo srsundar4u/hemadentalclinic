@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Appointment details | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"></head>
+<body><main><p class="brand">Dr Hemashree's Dental Studio</p><section class="card">
+    <a th:href="@{/appointments(date=${appointment.startsAt.toLocalDate()})}">← Appointment list</a><h1>Appointment details</h1>
+    <p class="success" role="status" th:if="${message}" th:text="${message}"></p><p class="error" role="alert" th:if="${error}" th:text="${error}"></p>
+    <dl><dt>Patient</dt><dd><a th:href="@{/patients/{id}(id=${appointment.patientId})}" th:text="${appointment.patientName}"></a></dd><dt>Date and time</dt><dd th:text="${#temporals.format(appointment.startsAt, 'dd MMM yyyy, hh:mm a')}"></dd><dt>Duration</dt><dd th:text="${appointment.durationMinutes + ' minutes'}"></dd><dt>Status</dt><dd th:text="${#strings.replace(appointment.status, '_', ' ')}"></dd><dt>Reason</dt><dd th:text="${appointment.reason == null || appointment.reason.isBlank() ? 'Not provided' : appointment.reason}"></dd></dl>
+    <div th:if="${appointment.scheduled()}">
+        <a class="button-link" th:href="@{/appointments/{id}/edit(id=${appointment.id})}">Reschedule</a>
+        <form th:action="@{/appointments/{id}/status(id=${appointment.id})}" method="post" class="actions status-actions">
+            <button type="submit" name="status" value="ARRIVED">Mark arrived</button>
+            <button type="submit" name="status" value="CANCELLED">Cancel appointment</button>
+            <button type="submit" name="status" value="NO_SHOW">Mark no-show</button>
+        </form>
+    </div>
+    <p class="hint" th:if="${appointment.status == 'ARRIVED'}">Arrival recorded. Consultation will be available in the next screen.</p>
+</section></main></body></html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Book appointment | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"><script th:unless="${editing}" th:src="@{/js/patient-picker.js}" defer></script></head>
+<body><main><p class="brand">Dr Hemashree's Dental Studio</p><section class="card">
+    <a th:href="@{/appointments}">← Appointments</a><h1 th:text="${editing ? 'Reschedule appointment' : 'Book appointment'}"></h1>
+    <p class="hint">Times use the clinic's India time zone. Duration is 5–240 minutes.</p>
+    <form th:action="${editing ? '/appointments/' + appointmentId : '/appointments'}" th:object="${appointmentForm}" method="post">
+        <div class="error" role="alert" th:if="${#fields.hasErrors('*')}"><p>Please correct the fields below.</p><p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p></div>
+        <label for="patientSearch">Patient</label>
+        <input id="patientSearch" type="search" list="patientOptions" th:value="${patientLabel}" th:readonly="${editing}" th:attr="data-options-url=@{/patients/options}" placeholder="Search by name, phone or patient ID" autocomplete="off" aria-describedby="patientSearchHelp" required>
+        <datalist id="patientOptions"><option th:if="${!patientLabel.isEmpty()}" th:value="${patientLabel}" th:attr="data-id=${appointmentForm.patientId}"></option></datalist>
+        <input type="hidden" th:field="*{patientId}">
+        <p class="field-error" th:errors="*{patientId}"></p>
+        <p class="hint" id="patientSearchHelp" th:unless="${editing}">Type to search, then select a patient from the suggestions. <a th:href="@{/patients/new}">Create new patient</a></p>
+        <p class="hint" id="patientPickerStatus" role="status" aria-live="polite" th:unless="${editing}"></p>
+        <noscript th:unless="${editing}"><p>Enable JavaScript for patient search, or book from the patient's profile.</p></noscript>
+        <label for="startsAt">Date and time</label><input th:field="*{startsAt}" type="datetime-local" required><p class="field-error" th:errors="*{startsAt}"></p>
+        <label for="durationMinutes">Duration in minutes</label><input th:field="*{durationMinutes}" type="number" min="5" max="240" required><p class="field-error" th:errors="*{durationMinutes}"></p>
+        <label for="reason">Reason (optional)</label><textarea th:field="*{reason}" rows="3" maxlength="500"></textarea><p class="field-error" th:errors="*{reason}"></p>
+        <div class="actions"><button type="submit" th:text="${editing ? 'Save new time' : 'Book appointment'}"></button><a th:href="@{/appointments}">Cancel</a></div>
+    </form>
+</section></main></body></html>
