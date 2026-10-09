@@ -1,0 +1,14 @@
+target/
+.maven-cache/
+.idea/
+*.iml
+.vscode/
+.env
+.env.*
+!.env.example
+*.log
+*.dump
+*.backup
+data/
+backups/
+application-local.properties
