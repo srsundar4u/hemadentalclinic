@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Patient profile | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"></head>
+<body><main>
+    <p class="brand">Dr Hemashree's Dental Studio</p>
+    <section class="card">
+        <a th:href="@{/patients}">← Patient list</a>
+        <p class="success" role="status" th:if="${message}" th:text="${message}"></p>
+        <h1 th:text="${patient.fullName}"></h1>
+        <dl><dt>Patient ID</dt><dd th:text="${patient.id}"></dd><dt>Phone</dt><dd th:text="${patient.phone}"></dd><dt>Date of birth</dt><dd th:text="${patient.dateOfBirth == null ? 'Not provided' : #temporals.format(patient.dateOfBirth, 'dd MMM yyyy')}"></dd><dt>Address</dt><dd th:text="${patient.address == null || patient.address.isBlank() ? 'Not provided' : patient.address}"></dd></dl>
+        <a class="button-link" th:href="@{/patients/{id}/edit(id=${patient.id})}">Edit details</a>
+        <p class="hint">Appointments, visit history and balances will be added as we build those screens.</p>
+    </section>
+</main></body></html>

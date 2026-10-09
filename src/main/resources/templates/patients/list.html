@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Patients | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"></head>
+<body><main>
+    <p class="brand">Dr Hemashree's Dental Studio</p>
+    <section class="card">
+        <a th:href="@{/}">← Dashboard</a>
+        <div class="page-heading"><h1>Patients</h1><a class="button-link" th:href="@{/patients/new}">Create new</a></div>
+        <form th:action="@{/patients}" method="get">
+            <label for="q">Search by name, phone or patient ID</label>
+            <div class="search-row"><input id="q" name="q" th:value="${query}" type="search"><button type="submit">Search</button><a th:href="@{/patients}">Clear</a></div>
+        </form>
+        <p class="hint">Showing up to 100 patients. Narrow your search to find a specific patient.</p>
+        <p th:if="${#lists.isEmpty(patients)}" th:text="${query.isBlank() ? 'No patients registered yet. Select Create new to begin.' : 'No patients match your search.'}"></p>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(patients)}"><table>
+            <thead><tr><th>Patient ID</th><th>Name</th><th>Phone</th></tr></thead>
+            <tbody><tr th:each="patient : ${patients}"><td th:text="${patient.id}"></td><td><a th:href="@{/patients/{id}(id=${patient.id})}" th:text="${patient.fullName}"></a></td><td th:text="${patient.phone}"></td></tr></tbody>
+        </table></div>
+    </section>
+</main></body></html>

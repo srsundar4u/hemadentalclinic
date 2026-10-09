@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Patient details | Dental Clinic</title><link rel="stylesheet" th:href="@{/css/clinic.css}"></head>
+<body><main>
+    <p class="brand">Dr Hemashree's Dental Studio</p>
+    <section class="card">
+        <a th:href="@{/patients}">← Patient list</a>
+        <h1 th:text="${editing ? 'Edit patient' : 'Register patient'}"></h1>
+        <p class="hint">Use fictional patient details for this demo. Name and phone are required.</p>
+        <form th:action="${editing ? '/patients/' + patientId : '/patients'}" th:object="${patientForm}" method="post">
+            <p class="error" role="alert" th:if="${#fields.hasErrors('*')}">Please correct the fields below.</p>
+            <label for="fullName">Full name</label><input th:field="*{fullName}" maxlength="150" required>
+            <p class="field-error" th:errors="*{fullName}"></p>
+            <label for="phone">Phone number</label><input th:field="*{phone}" type="tel" inputmode="numeric" pattern="[1-9][0-9]{9}" minlength="10" maxlength="10" title="Enter exactly 10 digits. The first digit must not be zero." required>
+            <p class="field-error" th:errors="*{phone}"></p>
+            <label for="dateOfBirth">Date of birth (optional)</label><input th:field="*{dateOfBirth}" type="date">
+            <p class="field-error" th:errors="*{dateOfBirth}"></p>
+            <label for="address">Address (optional)</label><textarea th:field="*{address}" maxlength="500" rows="3"></textarea>
+            <p class="field-error" th:errors="*{address}"></p>
+            <div class="actions"><button type="submit" th:text="${editing ? 'Save changes' : 'Register patient'}"></button><a th:href="${editing ? '/patients/' + patientId : '/patients'}">Cancel</a></div>
+        </form>
+    </section>
+</main></body></html>

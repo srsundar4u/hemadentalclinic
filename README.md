@@ -81,6 +81,16 @@ Initially the totals are 0, 0 and ₹0.00 because there are no appointments or p
 
 Tests use a separate in-memory H2 database in PostgreSQL compatibility mode to verify empty totals, midnight boundaries, completed arrivals and payments for older visits. This does not replace verification on your PostgreSQL installation after restart.
 
+## Patient screens
+
+Reload Maven and restart using the same environment variables. From the dashboard choose Patients. Search by a partial name or phone, or an exact numeric patient ID. Create new opens registration; successful registration redirects to the patient's profile with its generated ID. Edit details allows corrections. Name and phone are required. Phone must contain exactly 10 digits and cannot start with zero; date of birth and address are optional. Shared family phone numbers are allowed. The list displays up to 100 matches, ordered by name; refine the search for larger lists.
+
+Try a fictional patient named Synthetic Patient with phone 9876543210. Save, search by the generated ID, open the profile, edit the name and restart to confirm persistence. No real records are automatically seeded. Clinical history and payment sections will follow with their own screens.
+
+`PatientController` handles URLs and form validation. `PatientForm` carries validated input. `PatientRepository` runs parameterized SQL against PostgreSQL. `Patient` represents a saved record, and the templates display it. POST forms retain CSRF protection. Successful saves redirect to prevent duplicate submission on browser refresh. Patients have no delete action.
+
+Tests cover create/search/edit persistence in a separate H2 test database, literal search wildcards, required input, login protection, CSRF, form rendering and unknown patient IDs. Verify saving on local PostgreSQL before committing this milestone.
+
 ## Planned increments
 
 1. Start the server and display the home page.
@@ -100,3 +110,4 @@ PostgreSQL will store records locally on the laptop. GitHub will store source co
 ## Laptop as the clinic server
 
 After login and permissions are implemented, we will enable access from other clinic devices and configure a Windows firewall rule scoped to the clinic network. Devices will use the laptop's local network address rather than `localhost`. The laptop must remain powered on, awake, and reachable, with the application and PostgreSQL running. Remote internet access and paid hosting are outside the initial setup.
+

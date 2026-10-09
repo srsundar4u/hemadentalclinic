@@ -26,6 +26,7 @@ class LoginTest {
     @Autowired MockMvc mvc;
     @MockitoBean JdbcTemplate jdbcTemplate;
     @MockitoBean DashboardService dashboard;
+    @MockitoBean PatientRepository patients;
 
     @org.junit.jupiter.api.BeforeEach
     void dashboardTotals() {
@@ -80,6 +81,31 @@ class LoginTest {
     }
 
     @Test
+    void patientPagesAreProtectedAndRegistrationValidatesAndRedirects() throws Exception {
+        mvc.perform(get("/patients")).andExpect(status().is3xxRedirection());
+        var staff = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("receptionist").roles("RECEPTIONIST");
+        org.mockito.Mockito.when(patients.search("Synthetic")).thenReturn(java.util.List.of(new Patient(7, "Synthetic Patient", "9876543210", null, null)));
+        mvc.perform(get("/patients").param("q", "Synthetic").with(staff)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("Synthetic Patient")))
+            .andExpect(content().string(containsString("/patients/new")))
+            .andExpect(content().string(containsString("/patients/7")));
+        mvc.perform(get("/patients/new").with(staff)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("name=\"_csrf\"")));
+        mvc.perform(post("/patients").with(staff).with(csrf()).param("fullName", " ").param("phone", "-------"))
+            .andExpect(status().isOk()).andExpect(content().string(containsString("Please correct")));
+        org.mockito.Mockito.verify(patients, org.mockito.Mockito.never()).create(org.mockito.ArgumentMatchers.any());
+        org.mockito.Mockito.when(patients.create(org.mockito.ArgumentMatchers.any())).thenReturn(7L);
+        mvc.perform(post("/patients").with(staff).with(csrf()).param("fullName", "Synthetic Patient").param("phone", "9876543210"))
+            .andExpect(redirectedUrl("/patients/7"));
+        mvc.perform(post("/patients").with(staff).param("fullName", "Synthetic Patient").param("phone", "9876543210"))
+            .andExpect(status().isForbidden());
+        org.mockito.Mockito.when(patients.find(7)).thenReturn(java.util.Optional.of(new Patient(7, "Synthetic Patient", "9876543210", null, null)));
+        mvc.perform(get("/patients/7").with(staff)).andExpect(status().isOk())
+            .andExpect(content().string(containsString("Synthetic Patient")));
+        mvc.perform(get("/patients/9999").with(staff)).andExpect(status().isNotFound());
+    }
+
+    @Test
     void incorrectCredentialsShowAnErrorAndCsrfIsRequired() throws Exception {
         mvc.perform(post("/login").with(csrf()).param("username", "dentist")
             .param("password", "wrong-password")).andExpect(redirectedUrl("/login?error"));
@@ -89,3 +115,4 @@ class LoginTest {
             .param("password", "fictional-dentist-test")).andExpect(status().isForbidden());
     }
 }
+
