@@ -161,5 +161,7 @@ PostgreSQL will store records locally on the laptop. GitHub will store source co
 
 ## Laptop as the clinic server
 
-After login and permissions are implemented, we will enable access from other clinic devices and configure a Windows firewall rule scoped to the clinic network. Devices will use the laptop's local network address rather than `localhost`. The laptop must remain powered on, awake, and reachable, with the application and PostgreSQL running. Remote internet access and paid hosting are outside the initial setup.
+The packaged application runs independently of IntelliJ. See [laptop deployment](docs/laptop-deployment.md) for start, stop and package commands. The laptop must remain powered on, awake and reachable, with the application and PostgreSQL running. HTTPS remote access setup is pending the choice of a private connection or public tunnel; the server currently stays on localhost.
+
+The [Java Android app](android/README.md) embeds the same clinic screens, including appointment booking. Enter the reachable HTTPS clinic address after remote access is configured. The debug APK is a learning-demo installer; physical-phone verification is still required.
 
